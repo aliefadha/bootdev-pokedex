@@ -5,34 +5,27 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/aliefadha/bootdev-pokedex/internal/pokeapi"
 )
+
+type config struct {
+	pokeapiClient pokeapi.Client
+	Next          *string
+	Previous      *string
+}
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
-}
-
-func getCommands() map[string]cliCommand {
-	return map[string]cliCommand{
-		"exit": {
-			name:        "exit",
-			description: "Exit the Pokedex",
-			callback:    commandExit,
-		},
-		"help": {
-			name:        "help",
-			description: "Displays a help message",
-			callback:    commandHelp,
-		},
-	}
+	callback    func(*config) error
 }
 
 func cleanInput(text string) []string {
 	return strings.Fields(strings.ToLower(text))
 }
 
-func startRepl() {
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -47,7 +40,7 @@ func startRepl() {
 
 		value, exists := getCommands()[commandName]
 		if exists {
-			err := value.callback()
+			err := value.callback(cfg)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -56,5 +49,30 @@ func startRepl() {
 			fmt.Println("Unknown command")
 			continue
 		}
+	}
+}
+
+func getCommands() map[string]cliCommand {
+	return map[string]cliCommand{
+		"map": {
+			name:        "map",
+			description: "Get the next page of locations",
+			callback:    commandMapf,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Get the previous page of locations",
+			callback:    commandMapb,
+		},
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    CommandExit,
+		},
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    CommandHelp,
+		},
 	}
 }
